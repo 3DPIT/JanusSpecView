@@ -25,12 +25,38 @@ function App() {
         body: JSON.stringify({ url }),
       });
 
+      // HTTP 상태 코드 확인
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(
+          `HTTP ${res.status} ${res.statusText}: ${errorText || "응답 없음"}`
+        );
+      }
+
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        throw new Error(
+          `JSON이 아닌 응답을 받았습니다 (Content-Type: ${contentType}): ${text.substring(
+            0,
+            200
+          )}`
+        );
+      }
+
       const data = await res.json();
       setResponse(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "요청 중 오류가 발생했습니다"
-      );
+      let errorMessage = "요청 중 오류가 발생했습니다";
+
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        errorMessage = `네트워크 오류: 백엔드 서버(http://127.0.0.1:8080)에 연결할 수 없습니다. 서버가 실행 중인지 확인하세요.`;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -47,7 +73,7 @@ function App() {
 
     const interval = setInterval(() => {
       fetchData();
-    }, 1000); // 60초 = 1분
+    }, 4000); // 60초 = 1분
 
     return () => clearInterval(interval);
   }, [autoRefresh, fetchData]);
