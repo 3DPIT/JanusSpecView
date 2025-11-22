@@ -15,6 +15,7 @@ interface SwaggerCard {
 
 const STORAGE_KEY = "swagger-cards";
 const REFRESH_INTERVAL_KEY = "swagger-refresh-interval";
+const CHANGED_CARD_IDS_KEY = "swagger-changed-card-ids";
 
 // 로컬스토리지에서 조회 간격 불러오기
 const loadRefreshInterval = (): number => {
@@ -31,6 +32,22 @@ const loadRefreshInterval = (): number => {
     console.error("Failed to load refresh interval:", error);
   }
   return 4000; // 기본 4초
+};
+
+// 로컬스토리지에서 변경된 카드 ID 불러오기
+const loadChangedCardIds = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem(CHANGED_CARD_IDS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return new Set(parsed);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load changed card IDs:", error);
+  }
+  return new Set();
 };
 
 // 로컬스토리지에서 카드 불러오기
@@ -80,6 +97,9 @@ export const SwaggerView = () => {
   const [globalRefreshInterval, setGlobalRefreshInterval] = useState<number>(
     loadRefreshInterval()
   );
+  const [changedCardIds, setChangedCardIds] = useState<Set<string>>(
+    loadChangedCardIds()
+  );
 
   // 카드 변경 시 로컬스토리지에 저장
   useEffect(() => {
@@ -108,8 +128,28 @@ export const SwaggerView = () => {
     }
   }, [globalRefreshInterval]);
 
+  // 변경된 카드 ID 변경 시 로컬스토리지에 저장
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        CHANGED_CARD_IDS_KEY,
+        JSON.stringify(Array.from(changedCardIds))
+      );
+    } catch (error) {
+      console.error("Failed to save changed card IDs:", error);
+    }
+  }, [changedCardIds]);
+
   // 카드 클릭 시 상세 페이지로 이동
-  const handleCardClick = (cardName: string) => {
+  const handleCardClick = (cardName: string, cardId: string) => {
+    // 깜빡이는 카드인 경우에만 애니메이션 제거
+    if (changedCardIds.has(cardId)) {
+      setChangedCardIds((prevIds) => {
+        const newSet = new Set(prevIds);
+        newSet.delete(cardId);
+        return newSet;
+      });
+    }
     navigate(`/swagger-view/${encodeURIComponent(cardName)}`);
   };
 
@@ -159,6 +199,17 @@ export const SwaggerView = () => {
               // 이전 응답과 새 응답을 비교
               const responseChanged =
                 JSON.stringify(c.response) !== JSON.stringify(data);
+
+              // 응답이 변경되었고, 자동조회 중인 경우 애니메이션 트리거
+              // 디테일 페이지로 이동할 때까지 계속 깜빡임
+              if (responseChanged && c.autoRefresh) {
+                setChangedCardIds((prevIds) => {
+                  const newSet = new Set(prevIds);
+                  newSet.add(cardId);
+                  return newSet;
+                });
+              }
+
               return {
                 ...c,
                 response: data,
@@ -342,12 +393,17 @@ export const SwaggerView = () => {
 
       <div className="cards-container">
         {cards.map((card) => (
-          <div key={card.id} className="swagger-card">
+          <div
+            key={card.id}
+            className={`swagger-card ${
+              changedCardIds.has(card.id) ? "card-changed" : ""
+            }`}
+          >
             <div className="card-header">
               <div className="card-title-section">
                 <h2
                   className="clickable-title"
-                  onClick={() => handleCardClick(card.name)}
+                  onClick={() => handleCardClick(card.name, card.id)}
                   title="상세 정보 보기"
                 >
                   {card.name} →
