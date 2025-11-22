@@ -7,6 +7,7 @@ interface SwaggerCard {
   id: string;
   name: string;
   url: string;
+  swaggerUrl?: string; // Swagger UI URL (선택적)
   autoRefresh: boolean;
   loading: boolean;
   response: Record<string, unknown> | null;
@@ -63,6 +64,7 @@ const loadCardsFromStorage = (): SwaggerCard[] => {
           id: card.id,
           name: card.name,
           url: card.url,
+          swaggerUrl: card.swaggerUrl || undefined, // Swagger URL 복원
           autoRefresh: card.autoRefresh ?? false, // autoRefresh 상태 복원
           loading: false, // 로딩 상태만 초기화
           response: card.response || null,
@@ -80,6 +82,7 @@ const loadCardsFromStorage = (): SwaggerCard[] => {
       id: "1",
       name: "Members API",
       url: "http://3dpit.iptime.org:8000/api/v1/members/api-docs/swagger",
+      swaggerUrl: undefined,
       autoRefresh: false,
       loading: false,
       response: null,
@@ -94,6 +97,7 @@ export const SwaggerView = () => {
   const [cards, setCards] = useState<SwaggerCard[]>(loadCardsFromStorage());
   const [newCardName, setNewCardName] = useState("");
   const [newCardUrl, setNewCardUrl] = useState("");
+  const [newCardSwaggerUrl, setNewCardSwaggerUrl] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [globalRefreshInterval, setGlobalRefreshInterval] = useState<number>(
     loadRefreshInterval()
@@ -101,6 +105,13 @@ export const SwaggerView = () => {
   const [changedCardIds, setChangedCardIds] = useState<Set<string>>(
     loadChangedCardIds()
   );
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editCardName, setEditCardName] = useState("");
+  const [editCardUrl, setEditCardUrl] = useState("");
+  const [editCardSwaggerUrl, setEditCardSwaggerUrl] = useState("");
+  const [showSwaggerModal, setShowSwaggerModal] = useState(false);
+  const [swaggerModalUrl, setSwaggerModalUrl] = useState("");
+  const [iframeError, setIframeError] = useState(false);
 
   // 카드 변경 시 로컬스토리지에 저장
   useEffect(() => {
@@ -128,22 +139,6 @@ export const SwaggerView = () => {
       console.error("Failed to save refresh interval:", error);
     }
   }, [globalRefreshInterval]);
-
-  // 컴포넌트 마운트 시 존재하지 않는 카드 ID 제거
-  useEffect(() => {
-    const loadedIds = loadChangedCardIds();
-    const validCardIds = new Set(cards.map((card) => card.id));
-    const filteredIds = new Set(
-      Array.from(loadedIds).filter((id) => validCardIds.has(id))
-    );
-
-    if (filteredIds.size !== loadedIds.size) {
-      setChangedCardIds(filteredIds);
-    } else if (filteredIds.size > 0 && changedCardIds.size === 0) {
-      setChangedCardIds(filteredIds);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 마운트 시 한 번만 실행
 
   // 변경된 카드 ID 변경 시 로컬스토리지에 저장
   useEffect(() => {
@@ -291,6 +286,7 @@ export const SwaggerView = () => {
       id: Date.now().toString(),
       name: newCardName.trim(),
       url: newCardUrl.trim(),
+      swaggerUrl: newCardSwaggerUrl.trim() || undefined,
       autoRefresh: false,
       loading: false,
       response: null,
@@ -310,7 +306,63 @@ export const SwaggerView = () => {
     });
     setNewCardName("");
     setNewCardUrl("");
+    setNewCardSwaggerUrl("");
     setShowAddForm(false);
+  };
+
+  const startEditCard = (card: SwaggerCard) => {
+    setEditingCardId(card.id);
+    setEditCardName(card.name);
+    setEditCardUrl(card.url);
+    setEditCardSwaggerUrl(card.swaggerUrl || "");
+  };
+
+  const cancelEdit = () => {
+    setEditingCardId(null);
+    setEditCardName("");
+    setEditCardUrl("");
+    setEditCardSwaggerUrl("");
+  };
+
+  const saveEditCard = () => {
+    if (!editCardName.trim() || !editCardUrl.trim()) {
+      alert("이름과 URL을 모두 입력해주세요.");
+      return;
+    }
+
+    setCards((prev) =>
+      prev.map((card) =>
+        card.id === editingCardId
+          ? {
+              ...card,
+              name: editCardName.trim(),
+              url: editCardUrl.trim(),
+              swaggerUrl: editCardSwaggerUrl.trim() || undefined,
+            }
+          : card
+      )
+    );
+    cancelEdit();
+  };
+
+  const openSwaggerModal = (swaggerUrl: string) => {
+    setSwaggerModalUrl(swaggerUrl);
+    setShowSwaggerModal(true);
+    setIframeError(false);
+  };
+
+  const closeSwaggerModal = () => {
+    setShowSwaggerModal(false);
+    setSwaggerModalUrl("");
+    setIframeError(false);
+  };
+
+  const handleIframeError = () => {
+    setIframeError(true);
+  };
+
+  const openInNewTab = () => {
+    window.open(swaggerModalUrl, "_blank", "noopener,noreferrer");
   };
 
   const deleteCard = (cardId: string) => {
@@ -551,13 +603,24 @@ export const SwaggerView = () => {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="cardUrl">Swagger URL</label>
+            <label htmlFor="cardUrl">API URL</label>
             <input
               type="text"
               id="cardUrl"
               placeholder="예: http://localhost:8080/api-docs/swagger"
               value={newCardUrl}
               onChange={(e) => setNewCardUrl(e.target.value)}
+              className="card-url-input"
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="cardSwaggerUrl">Swagger UI URL (선택사항)</label>
+            <input
+              type="text"
+              id="cardSwaggerUrl"
+              placeholder="예: http://localhost:8080/swagger-ui/index.html"
+              value={newCardSwaggerUrl}
+              onChange={(e) => setNewCardSwaggerUrl(e.target.value)}
               className="card-url-input"
             />
           </div>
@@ -577,27 +640,94 @@ export const SwaggerView = () => {
           >
             <div className="card-header">
               <div className="card-title-section">
-                <h2
-                  className="clickable-title"
-                  onClick={() => handleCardClick(card.name, card.id)}
-                  title="상세 정보 보기"
-                >
-                  {card.name} →
-                </h2>
-                <p className="card-url">🔗 {card.url}</p>
-                {card.lastUpdated && (
-                  <p className="last-updated">
-                    마지막 업데이트: {card.lastUpdated.toLocaleTimeString()}
-                  </p>
+                {editingCardId === card.id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editCardName}
+                      onChange={(e) => setEditCardName(e.target.value)}
+                      className="edit-input"
+                      placeholder="카드 이름"
+                    />
+                    <input
+                      type="text"
+                      value={editCardUrl}
+                      onChange={(e) => setEditCardUrl(e.target.value)}
+                      className="edit-input"
+                      placeholder="API URL"
+                    />
+                    <input
+                      type="text"
+                      value={editCardSwaggerUrl}
+                      onChange={(e) => setEditCardSwaggerUrl(e.target.value)}
+                      className="edit-input"
+                      placeholder="Swagger UI URL (선택사항)"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h2
+                      className="clickable-title"
+                      onClick={() => handleCardClick(card.name, card.id)}
+                      title="상세 정보 보기"
+                    >
+                      {card.name} →
+                    </h2>
+                    <p className="card-url">🔗 {card.url}</p>
+                    {card.swaggerUrl && (
+                      <p
+                        className="card-swagger-url"
+                        onClick={() => openSwaggerModal(card.swaggerUrl!)}
+                        title="Swagger UI 열기"
+                      >
+                        📄 Swagger UI 보기
+                      </p>
+                    )}
+                    {card.lastUpdated && (
+                      <p className="last-updated">
+                        마지막 업데이트: {card.lastUpdated.toLocaleTimeString()}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
-              <button
-                className="delete-button"
-                onClick={() => deleteCard(card.id)}
-                title="삭제"
-              >
-                ✕
-              </button>
+              <div className="card-header-buttons">
+                {editingCardId === card.id ? (
+                  <>
+                    <button
+                      className="save-button"
+                      onClick={saveEditCard}
+                      title="저장"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className="cancel-button"
+                      onClick={cancelEdit}
+                      title="취소"
+                    >
+                      ✕
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="edit-button"
+                      onClick={() => startEditCard(card)}
+                      title="수정"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      className="delete-button"
+                      onClick={() => deleteCard(card.id)}
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="card-controls">
@@ -650,6 +780,61 @@ export const SwaggerView = () => {
           </div>
         ))}
       </div>
+
+      {/* Swagger Modal */}
+      {showSwaggerModal && (
+        <div className="swagger-modal-overlay" onClick={closeSwaggerModal}>
+          <div
+            className="swagger-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="swagger-modal-header">
+              <h3>Swagger UI</h3>
+              <button
+                className="modal-close-button"
+                onClick={closeSwaggerModal}
+                title="닫기"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="swagger-modal-body">
+              {iframeError ? (
+                <div className="iframe-error-container">
+                  <div className="iframe-error-message">
+                    <p>⚠️ 이 페이지는 iframe에 표시할 수 없습니다.</p>
+                    <p>X-Frame-Options 정책으로 인해 차단되었습니다.</p>
+                    <button
+                      className="open-new-tab-button"
+                      onClick={openInNewTab}
+                    >
+                      새 탭에서 열기
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <object
+                  data={swaggerModalUrl}
+                  type="text/html"
+                  className="swagger-object"
+                  title="Swagger UI"
+                  onError={handleIframeError}
+                >
+                  <div className="object-fallback">
+                    <p>⚠️ 이 페이지를 표시할 수 없습니다.</p>
+                    <button
+                      className="open-new-tab-button"
+                      onClick={openInNewTab}
+                    >
+                      새 탭에서 열기
+                    </button>
+                  </div>
+                </object>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="app-footer">
