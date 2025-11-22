@@ -323,7 +323,9 @@ export const SwaggerViewDetail = () => {
         >
           ← 뒤로가기
         </button>
-        <h1>📊 API 변경 이력 - {serviceName}</h1>
+        <h1>
+          <span className="header-icon">📊</span> API 변경 이력 - {serviceName}
+        </h1>
       </div>
 
       {error && (

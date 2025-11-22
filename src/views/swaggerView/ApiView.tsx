@@ -21,7 +21,11 @@ const loadRefreshInterval = (): number => {
   try {
     const stored = localStorage.getItem(REFRESH_INTERVAL_KEY);
     if (stored) {
-      return Number(stored);
+      const parsed = Number(stored);
+      // 유효한 숫자인지 확인 (NaN이 아니고 양수인지)
+      if (!isNaN(parsed) && parsed > 0) {
+        return parsed;
+      }
     }
   } catch (error) {
     console.error("Failed to load refresh interval:", error);
@@ -35,13 +39,17 @@ const loadCardsFromStorage = (): SwaggerCard[] => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Date 객체 복원 및 loading만 초기화, autoRefreshInterval 제거
-      return parsed.map((card: any) => {
-        const { autoRefreshInterval, ...rest } = card;
+      // Date 객체 복원 및 loading만 초기화, autoRefresh 상태는 유지
+      return parsed.map((card: SwaggerCard) => {
         return {
-          ...rest,
-          lastUpdated: rest.lastUpdated ? new Date(rest.lastUpdated) : null,
+          id: card.id,
+          name: card.name,
+          url: card.url,
+          autoRefresh: card.autoRefresh ?? false, // autoRefresh 상태 복원
           loading: false, // 로딩 상태만 초기화
+          response: card.response || null,
+          error: card.error || null,
+          lastUpdated: card.lastUpdated ? new Date(card.lastUpdated) : null,
         };
       });
     }
@@ -81,6 +89,15 @@ export const ApiView = () => {
       console.error("Failed to save cards to storage:", error);
     }
   }, [cards]);
+
+  // 컴포넌트 마운트 시 로컬스토리지에서 조회 간격 불러오기
+  useEffect(() => {
+    const savedInterval = loadRefreshInterval();
+    if (savedInterval !== globalRefreshInterval) {
+      setGlobalRefreshInterval(savedInterval);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 마운트 시 한 번만 실행
 
   // 전역 조회 간격 변경 시 로컬스토리지에 저장
   useEffect(() => {
@@ -258,7 +275,9 @@ export const ApiView = () => {
           <button className="home-button" onClick={() => navigate("/")}>
             ← 시작화면
           </button>
-          <h1>📊 Swagger API Viewer</h1>
+          <h1>
+            <span className="header-icon">📊</span> Swagger API Viewer
+          </h1>
         </div>
         <div className="header-right">
           <div className="refresh-interval-control">
