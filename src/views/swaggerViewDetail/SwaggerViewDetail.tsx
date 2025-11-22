@@ -99,6 +99,9 @@ export const SwaggerViewDetail = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "chart">("summary");
+  const [activeChartTab, setActiveChartTab] = useState<"endpoint" | "schema">(
+    "endpoint"
+  );
   const [schemaCounts, setSchemaCounts] = useState<
     Record<number, { added: number; removed: number; updated: number }>
   >({});
@@ -662,46 +665,62 @@ export const SwaggerViewDetail = () => {
 
                 {activeTab === "chart" && (
                   <div className="chart-container">
-                    {/* 엔드포인트 차트 섹션 */}
                     <div className="chart-group">
-                      <h2 className="chart-group-title">
-                        📡 엔드포인트 변경 현황
-                      </h2>
-                      <div className="chart-sections-grid">
-                        {generateEndpointPieChartData() && (
-                          <div className="chart-section">
-                            <h3>변경 유형별 분포</h3>
-                            <div className="pie-chart-wrapper">
-                              <Pie
-                                data={generateEndpointPieChartData()!}
-                                options={pieChartOptions}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        {generateEndpointBarChartData() && (
-                          <div className="chart-section">
-                            <h3>HTTP 메서드별 변경 현황</h3>
-                            <div className="bar-chart-wrapper">
-                              <Bar
-                                data={generateEndpointBarChartData()!}
-                                options={barChartOptions}
-                              />
-                            </div>
-                          </div>
+                      <div className="chart-tabs">
+                        <button
+                          className={`chart-tab-button ${
+                            activeChartTab === "endpoint" ? "active" : ""
+                          }`}
+                          onClick={() => setActiveChartTab("endpoint")}
+                        >
+                          📡 엔드포인트
+                        </button>
+                        {(selectedDiff.addedSchemas ||
+                          selectedDiff.removedSchemas ||
+                          selectedDiff.updatedSchemas) && (
+                          <button
+                            className={`chart-tab-button ${
+                              activeChartTab === "schema" ? "active" : ""
+                            }`}
+                            onClick={() => setActiveChartTab("schema")}
+                          >
+                            📋 스키마
+                          </button>
                         )}
                       </div>
-                    </div>
 
-                    {/* 스키마 차트 섹션 */}
-                    {(selectedDiff.addedSchemas ||
-                      selectedDiff.removedSchemas ||
-                      selectedDiff.updatedSchemas) &&
-                      generateSchemaPieChartData() && (
-                        <div className="chart-group">
-                          <h2 className="chart-group-title">
-                            📋 스키마 변경 현황
-                          </h2>
+                      {activeChartTab === "endpoint" && (
+                        <div className="chart-sections-grid">
+                          {generateEndpointPieChartData() && (
+                            <div className="chart-section">
+                              <h3>변경 유형별 분포</h3>
+                              <div className="pie-chart-wrapper">
+                                <Pie
+                                  data={generateEndpointPieChartData()!}
+                                  options={pieChartOptions}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          {generateEndpointBarChartData() && (
+                            <div className="chart-section">
+                              <h3>HTTP 메서드별 변경 현황</h3>
+                              <div className="bar-chart-wrapper">
+                                <Bar
+                                  data={generateEndpointBarChartData()!}
+                                  options={barChartOptions}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {activeChartTab === "schema" &&
+                        (selectedDiff.addedSchemas ||
+                          selectedDiff.removedSchemas ||
+                          selectedDiff.updatedSchemas) &&
+                        generateSchemaPieChartData() && (
                           <div className="chart-sections-grid">
                             <div className="chart-section">
                               <h3>변경 유형별 분포</h3>
@@ -724,8 +743,8 @@ export const SwaggerViewDetail = () => {
                               </div>
                             )}
                           </div>
-                        </div>
-                      )}
+                        )}
+                    </div>
                   </div>
                 )}
               </div>
