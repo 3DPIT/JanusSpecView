@@ -272,7 +272,7 @@
   max-width: 100%;
   position: relative;
   backdrop-filter: blur(20px);
-  height: 260px;
+  height: 210px;
 }
 
 .swagger-card::before {
@@ -582,6 +582,133 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   word-break: break-all;
+}
+
+/* 구조화된 응답 스타일 */
+.response-section {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.response-section:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.response-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.response-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.response-label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.response-value {
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-word;
+  flex: 1;
+}
+
+.endpoints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.endpoint-item {
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border-left: 3px solid rgba(110, 231, 183, 0.5);
+}
+
+.endpoint-path-display {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 0.3rem;
+  word-break: break-all;
+}
+
+.endpoint-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.method-tag {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.more-endpoints {
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+.servers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.server-item {
+  padding: 0.4rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.server-url {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+
+.server-desc {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.response-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 /* Footer */

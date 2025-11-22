@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SwaggerView.css";
 
@@ -127,6 +128,22 @@ export const SwaggerView = () => {
       console.error("Failed to save refresh interval:", error);
     }
   }, [globalRefreshInterval]);
+
+  // 컴포넌트 마운트 시 존재하지 않는 카드 ID 제거
+  useEffect(() => {
+    const loadedIds = loadChangedCardIds();
+    const validCardIds = new Set(cards.map((card) => card.id));
+    const filteredIds = new Set(
+      Array.from(loadedIds).filter((id) => validCardIds.has(id))
+    );
+
+    if (filteredIds.size !== loadedIds.size) {
+      setChangedCardIds(filteredIds);
+    } else if (filteredIds.size > 0 && changedCardIds.size === 0) {
+      setChangedCardIds(filteredIds);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 마운트 시 한 번만 실행
 
   // 변경된 카드 ID 변경 시 로컬스토리지에 저장
   useEffect(() => {
@@ -298,8 +315,167 @@ export const SwaggerView = () => {
 
   const deleteCard = (cardId: string) => {
     if (confirm("이 카드를 삭제하시겠습니까?")) {
+      // 카드 삭제
       setCards((prev) => prev.filter((card) => card.id !== cardId));
+      // 깜빡임 상태도 함께 제거
+      setChangedCardIds((prevIds) => {
+        const newSet = new Set(prevIds);
+        newSet.delete(cardId);
+        return newSet;
+      });
     }
+  };
+
+  // 응답을 보기 좋게 포맷팅하는 함수
+  const formatResponse = (
+    response: Record<string, unknown> | null
+  ): ReactNode | null => {
+    if (!response) return null;
+
+    const result: ReactNode[] = [];
+
+    // Info 섹션
+    if (response.info && typeof response.info === "object") {
+      const info = response.info as Record<string, unknown>;
+      result.push(
+        <div key="info" className="response-section">
+          <h5 className="section-title">📋 API 정보</h5>
+          <div className="response-item">
+            {info.title != null && String(info.title).trim() !== "" && (
+              <div className="response-row">
+                <span className="response-label">제목:</span>
+                <span className="response-value">{String(info.title)}</span>
+              </div>
+            )}
+            {info.version != null && String(info.version).trim() !== "" && (
+              <div className="response-row">
+                <span className="response-label">버전:</span>
+                <span className="response-value">{String(info.version)}</span>
+              </div>
+            )}
+            {info.description != null &&
+              String(info.description).trim() !== "" && (
+                <div className="response-row">
+                  <span className="response-label">설명:</span>
+                  <span className="response-value">
+                    {String(info.description)}
+                  </span>
+                </div>
+              )}
+          </div>
+        </div>
+      );
+    }
+
+    // Paths 섹션
+    if (response.paths && typeof response.paths === "object") {
+      const paths = response.paths as Record<string, unknown>;
+      const pathEntries = Object.entries(paths);
+      if (pathEntries.length > 0) {
+        result.push(
+          <div key="paths" className="response-section">
+            <h5 className="section-title">
+              🔗 엔드포인트 ({pathEntries.length}개)
+            </h5>
+            <div className="endpoints-list">
+              {pathEntries.slice(0, 5).map(([path, methods], idx) => {
+                if (typeof methods === "object" && methods !== null) {
+                  const methodNames = Object.keys(
+                    methods as Record<string, unknown>
+                  );
+                  return (
+                    <div key={idx} className="endpoint-item">
+                      <div className="endpoint-path-display">{path}</div>
+                      <div className="endpoint-methods">
+                        {methodNames.map((method) => (
+                          <span
+                            key={method}
+                            className="method-tag"
+                            style={{
+                              backgroundColor:
+                                method === "get"
+                                  ? "#61affe"
+                                  : method === "post"
+                                  ? "#49cc90"
+                                  : method === "put"
+                                  ? "#fca130"
+                                  : method === "delete"
+                                  ? "#f93e3e"
+                                  : "#50e3c2",
+                            }}
+                          >
+                            {method.toUpperCase()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+              {pathEntries.length > 5 && (
+                <div className="more-endpoints">
+                  + {pathEntries.length - 5}개 더...
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // Servers 섹션
+    if (response.servers && Array.isArray(response.servers)) {
+      const servers = response.servers as Array<Record<string, unknown>>;
+      if (servers.length > 0) {
+        result.push(
+          <div key="servers" className="response-section">
+            <h5 className="section-title">🌐 서버</h5>
+            <div className="servers-list">
+              {servers.map((server, idx) => (
+                <div key={idx} className="server-item">
+                  {server.url != null && String(server.url).trim() !== "" && (
+                    <span className="server-url">{String(server.url)}</span>
+                  )}
+                  {server.description != null &&
+                    String(server.description).trim() !== "" && (
+                      <span className="server-desc">
+                        {String(server.description)}
+                      </span>
+                    )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // 기타 정보가 있는 경우
+    const otherKeys = Object.keys(response).filter(
+      (key) => !["info", "paths", "servers"].includes(key)
+    );
+    if (otherKeys.length > 0 && result.length === 0) {
+      // 구조화된 정보가 없으면 간단한 키-값 형태로 표시
+      return (
+        <div className="response-simple">
+          {Object.entries(response)
+            .slice(0, 10)
+            .map(([key, value], idx) => (
+              <div key={idx} className="response-row">
+                <span className="response-label">{key}:</span>
+                <span className="response-value">
+                  {typeof value === "object" && value !== null
+                    ? JSON.stringify(value).substring(0, 100) + "..."
+                    : String(value ?? "")}
+                </span>
+              </div>
+            ))}
+        </div>
+      );
+    }
+
+    return result.length > 0 ? <>{result}</> : null;
   };
 
   // 자동 새로고침
@@ -463,7 +639,9 @@ export const SwaggerView = () => {
                   <>
                     <h4>응답:</h4>
                     <div className="content-body">
-                      <pre>{JSON.stringify(card.response, null, 2)}</pre>
+                      {formatResponse(card.response) || (
+                        <pre>{JSON.stringify(card.response, null, 2)}</pre>
+                      )}
                     </div>
                   </>
                 )}
