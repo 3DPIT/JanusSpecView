@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0c29;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#302b63;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#24243e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100" height="100" fill="url(#bgGrad)" />
+  
+  <!-- Janus Two Faces - Conjoined Heads -->
+  <!-- Left Face Profile (looking left) -->
+  <g id="leftFace">
+    <!-- Head contour -->
+    <path d="M20 30 Q20 20 28 15 Q35 10 45 10 Q50 8 55 10 Q62 10 68 15 Q72 18 72 25 Q72 30 70 35 Q72 40 72 50 Q72 60 70 65 Q72 70 72 75 Q72 82 68 85 Q62 90 55 90 Q50 92 45 90 Q35 90 28 85 Q20 80 20 70 Q20 60 22 50 Q20 40 20 30 Z" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="1.8" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    
+    <!-- Forehead and brow -->
+    <path d="M28 20 Q35 18 45 18 Q50 16 55 18 Q62 18 68 20" 
+          stroke="#ffffff" 
+          stroke-width="1.2" 
+          fill="none"/>
+    
+    <!-- Eye (closed/contemplative) -->
+    <path d="M42 28 Q45 30 48 28" 
+          stroke="#ffffff" 
+          stroke-width="1.5" 
+          fill="none" 
+          stroke-linecap="round"/>
+    
+    <!-- Nose -->
+    <path d="M45 32 Q48 38 50 35 Q52 38 55 35" 
+          stroke="#ffffff" 
+          stroke-width="1.3" 
+          fill="none"/>
+    
+    <!-- Mouth -->
+    <path d="M46 42 Q50 45 54 42" 
+          stroke="#ffffff" 
+          stroke-width="1.2" 
+          fill="none" 
+          stroke-linecap="round"/>
+    
+    <!-- Chin -->
+    <path d="M45 50 Q50 55 55 50" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    
+    <!-- Curly hair and beard (left side) -->
+    <path d="M20 30 Q18 25 15 30 Q18 35 20 33" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M20 40 Q18 38 16 42 Q18 44 20 42" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M20 50 Q18 48 16 52 Q18 54 20 52" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M20 60 Q18 58 16 62 Q18 64 20 62" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M22 70 Q20 68 18 72 Q20 74 22 72" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+  </g>
+  
+  <!-- Right Face Profile (looking right) -->
+  <g id="rightFace">
+    <!-- Head contour (mirrored) -->
+    <path d="M28 30 Q28 20 35 15 Q42 10 50 10 Q55 8 60 10 Q67 10 73 15 Q77 18 80 25 Q80 30 78 35 Q80 40 80 50 Q80 60 78 65 Q80 70 80 75 Q80 82 73 85 Q67 90 60 90 Q55 92 50 90 Q42 90 35 85 Q28 80 28 70 Q28 60 30 50 Q28 40 28 30 Z" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="1.8" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    
+    <!-- Forehead and brow -->
+    <path d="M32 20 Q38 18 50 18 Q55 16 60 18 Q67 18 73 20" 
+          stroke="#ffffff" 
+          stroke-width="1.2" 
+          fill="none"/>
+    
+    <!-- Eye (closed/contemplative) -->
+    <path d="M52 28 Q55 30 58 28" 
+          stroke="#ffffff" 
+          stroke-width="1.5" 
+          fill="none" 
+          stroke-linecap="round"/>
+    
+    <!-- Nose -->
+    <path d="M50 35 Q52 38 55 35 Q58 38 60 35" 
+          stroke="#ffffff" 
+          stroke-width="1.3" 
+          fill="none"/>
+    
+    <!-- Mouth -->
+    <path d="M46 42 Q50 45 54 42" 
+          stroke="#ffffff" 
+          stroke-width="1.2" 
+          fill="none" 
+          stroke-linecap="round"/>
+    
+    <!-- Chin -->
+    <path d="M45 50 Q50 55 55 50" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    
+    <!-- Curly hair and beard (right side) -->
+    <path d="M80 30 Q82 25 85 30 Q82 35 80 33" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M80 40 Q82 38 84 42 Q82 44 80 42" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M80 50 Q82 48 84 52 Q82 54 80 52" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M80 60 Q82 58 84 62 Q82 64 80 62" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+    <path d="M78 70 Q80 68 82 72 Q80 74 78 72" 
+          stroke="#ffffff" 
+          stroke-width="1" 
+          fill="none"/>
+  </g>
+  
+  <!-- Laurel Wreath (encircling both heads) -->
+  <g id="wreath">
+    <!-- Wreath base -->
+    <ellipse cx="50" cy="22" rx="28" ry="10" 
+             fill="none" 
+             stroke="#ffffff" 
+             stroke-width="1.2" 
+             opacity="0.9"/>
+    
+    <!-- Laurel leaves (left side) -->
+    <path d="M30 18 Q28 16 30 14 Q32 16 30 18" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    <path d="M35 17 Q33 15 35 13 Q37 15 35 17" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    <path d="M40 16 Q38 14 40 12 Q42 14 40 16" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    
+    <!-- Laurel leaves (center) -->
+    <path d="M45 15 Q43 13 45 11 Q47 13 45 15" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    <path d="M50 15 Q48 13 50 11 Q52 13 50 15" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    <path d="M55 15 Q53 13 55 11 Q57 13 55 15" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    
+    <!-- Laurel leaves (right side) -->
+    <path d="M60 16 Q58 14 60 12 Q62 14 60 16" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    <path d="M65 17 Q63 15 65 13 Q67 15 65 17" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+    <path d="M70 18 Q68 16 70 14 Q72 16 70 18" 
+          stroke="#ffffff" 
+          stroke-width="0.8" 
+          fill="none" 
+          stroke-linecap="round"/>
+  </g>
+  
+  <!-- Shared neck/base (where two heads merge) -->
+  <path d="M35 75 Q50 88 65 75" 
+        stroke="#ffffff" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round"/>
+  
+  <!-- Additional detail lines for neck -->
+  <path d="M38 78 Q50 85 62 78" 
+        stroke="#ffffff" 
+        stroke-width="1" 
+        fill="none" 
+        opacity="0.6"/>
+</svg>

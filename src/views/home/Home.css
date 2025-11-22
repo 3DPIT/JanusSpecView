@@ -1,7 +1,7 @@
 /* 홈 컨테이너 */
 .home-container {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,20 +70,20 @@
   position: relative;
   z-index: 1;
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
   max-width: 800px;
 }
 
 /* 로고 */
 .logo-container {
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: center;
 }
 
 .logo-ring {
-  width: 180px;
-  height: 180px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: linear-gradient(135deg, #646cff, #535bf2);
   padding: 4px;
@@ -132,28 +132,28 @@
 
 /* 타이틀 */
 .title {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .title-main {
   display: block;
-  font-size: 4rem;
+  font-size: 2.5rem;
   font-weight: 900;
   background: linear-gradient(135deg, #646cff 0%, #a78bfa 50%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   text-shadow: 0 0 80px rgba(100, 108, 255, 0.5);
   animation: titleGlow 3s ease-in-out infinite;
 }
 
 .title-sub {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: #a0aec0;
   font-weight: 400;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 @keyframes titleGlow {
@@ -168,32 +168,35 @@
 
 /* 설명 */
 .description {
-  font-size: 1.3rem;
-  color: #cbd5e0;
-  margin-bottom: 3rem;
-  line-height: 1.8;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+  font-weight: 400;
 }
 
 /* CTA 버튼 */
 .cta-button {
   position: relative;
-  padding: 1.5rem 4rem;
-  font-size: 1.5rem;
+  padding: 1.1rem 2.75rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: white;
-  background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   border-radius: 50px;
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 40px rgba(100, 108, 255, 0.4);
-  margin-bottom: 4rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.45);
+  margin-bottom: 2.5rem;
+  backdrop-filter: blur(10px);
 }
 
 .cta-button:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 15px 60px rgba(100, 108, 255, 0.6);
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 20px 70px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
 }
 
 .cta-button:active {
@@ -259,31 +262,32 @@
 /* 기능 카드 */
 .features {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  padding: 2rem 2.5rem;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  min-width: 150px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  padding: 1.25rem 1.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 130px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .feature-card:hover {
   background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-10px);
-  border-color: rgba(100, 108, 255, 0.5);
-  box-shadow: 0 10px 30px rgba(100, 108, 255, 0.3);
+  transform: translateY(-6px);
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.35);
 }
 
 .feature-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
   animation: float 3s ease-in-out infinite;
 }
 
@@ -296,9 +300,10 @@
 }
 
 .feature-text {
-  font-size: 1.2rem;
-  color: #e2e8f0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 /* 반응형 디자인 */
@@ -338,4 +343,87 @@
     width: 60px;
     height: 60px;
   }
+
+  .home-footer {
+    margin-top: 3rem;
+  }
+
+  .creator-name {
+    font-size: 1.5rem;
+  }
+
+  .footer-copyright {
+    font-size: 0.8rem;
+  }
+}
+
+/* Footer */
+.home-footer {
+  margin-top: 2rem;
+  text-align: center;
+  animation: fadeInUp 1s ease 1.2s both;
+}
+
+.footer-created {
+  margin: 0 0 0.5rem 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.creator-name {
+  display: inline-block;
+  font-weight: 900;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #667eea);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 3px;
+  animation: gradientShift 3s ease infinite;
+  text-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+  position: relative;
+}
+
+.creator-name::before {
+  content: "BLACK";
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  filter: blur(20px);
+  opacity: 0.5;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 0.3;
+    filter: blur(15px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: blur(25px);
+  }
+}
+
+.footer-copyright {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }

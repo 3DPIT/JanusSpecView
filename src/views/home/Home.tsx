@@ -90,6 +90,15 @@ export const Home = () => {
             <div className="feature-text">직관적인 UI</div>
           </div>
         </div>
+
+        <footer className="home-footer">
+          <p className="footer-created">
+            Created by <span className="creator-name">BLACK</span>
+          </p>
+          <p className="footer-copyright">
+            © 2025 Janus Spec View. All rights reserved.
+          </p>
+        </footer>
       </div>
     </div>
   );

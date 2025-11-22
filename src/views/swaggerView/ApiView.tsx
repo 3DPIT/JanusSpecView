@@ -14,6 +14,20 @@ interface SwaggerCard {
 }
 
 const STORAGE_KEY = "swagger-cards";
+const REFRESH_INTERVAL_KEY = "swagger-refresh-interval";
+
+// 로컬스토리지에서 조회 간격 불러오기
+const loadRefreshInterval = (): number => {
+  try {
+    const stored = localStorage.getItem(REFRESH_INTERVAL_KEY);
+    if (stored) {
+      return Number(stored);
+    }
+  } catch (error) {
+    console.error("Failed to load refresh interval:", error);
+  }
+  return 4000; // 기본 4초
+};
 
 // 로컬스토리지에서 카드 불러오기
 const loadCardsFromStorage = (): SwaggerCard[] => {
@@ -21,12 +35,15 @@ const loadCardsFromStorage = (): SwaggerCard[] => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Date 객체 복원 및 loading만 초기화
-      return parsed.map((card: SwaggerCard) => ({
-        ...card,
-        lastUpdated: card.lastUpdated ? new Date(card.lastUpdated) : null,
-        loading: false, // 로딩 상태만 초기화
-      }));
+      // Date 객체 복원 및 loading만 초기화, autoRefreshInterval 제거
+      return parsed.map((card: any) => {
+        const { autoRefreshInterval, ...rest } = card;
+        return {
+          ...rest,
+          lastUpdated: rest.lastUpdated ? new Date(rest.lastUpdated) : null,
+          loading: false, // 로딩 상태만 초기화
+        };
+      });
     }
   } catch (error) {
     console.error("Failed to load cards from storage:", error);
@@ -52,6 +69,9 @@ export const ApiView = () => {
   const [newCardName, setNewCardName] = useState("");
   const [newCardUrl, setNewCardUrl] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [globalRefreshInterval, setGlobalRefreshInterval] = useState<number>(
+    loadRefreshInterval()
+  );
 
   // 카드 변경 시 로컬스토리지에 저장
   useEffect(() => {
@@ -61,6 +81,15 @@ export const ApiView = () => {
       console.error("Failed to save cards to storage:", error);
     }
   }, [cards]);
+
+  // 전역 조회 간격 변경 시 로컬스토리지에 저장
+  useEffect(() => {
+    try {
+      localStorage.setItem(REFRESH_INTERVAL_KEY, String(globalRefreshInterval));
+    } catch (error) {
+      console.error("Failed to save refresh interval:", error);
+    }
+  }, [globalRefreshInterval]);
 
   // 카드 클릭 시 상세 페이지로 이동
   const handleCardClick = (cardName: string) => {
@@ -175,8 +204,8 @@ export const ApiView = () => {
 
     const newCard: SwaggerCard = {
       id: Date.now().toString(),
-      name: newCardName,
-      url: newCardUrl,
+      name: newCardName.trim(),
+      url: newCardUrl.trim(),
       autoRefresh: false,
       loading: false,
       response: null,
@@ -184,7 +213,16 @@ export const ApiView = () => {
       lastUpdated: null,
     };
 
-    setCards((prev) => [...prev, newCard]);
+    setCards((prev) => {
+      const updatedCards = [...prev, newCard];
+      // 명시적으로 로컬스토리지에 저장
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCards));
+      } catch (error) {
+        console.error("Failed to save new card to storage:", error);
+      }
+      return updatedCards;
+    });
     setNewCardName("");
     setNewCardUrl("");
     setShowAddForm(false);
@@ -204,25 +242,52 @@ export const ApiView = () => {
       if (card.autoRefresh) {
         intervals[card.id] = setInterval(() => {
           fetchData(card.id);
-        }, 4000) as unknown as number; // 4초
+        }, globalRefreshInterval) as unknown as number;
       }
     });
 
     return () => {
       Object.values(intervals).forEach((interval) => clearInterval(interval));
     };
-  }, [cards, fetchData]);
+  }, [cards, fetchData, globalRefreshInterval]);
 
   return (
     <div className="app">
       <div className="header">
-        <h1>Swagger API Viewer</h1>
-        <button
-          className="add-card-button"
-          onClick={() => setShowAddForm(!showAddForm)}
-        >
-          {showAddForm ? "취소" : "+ 새 카드 추가"}
-        </button>
+        <div className="header-left">
+          <button className="home-button" onClick={() => navigate("/")}>
+            ← 시작화면
+          </button>
+          <h1>📊 Swagger API Viewer</h1>
+        </div>
+        <div className="header-right">
+          <div className="refresh-interval-control">
+            <label className="interval-label-header">조회 간격:</label>
+            <select
+              className="interval-select-header"
+              value={globalRefreshInterval}
+              onChange={(e) => setGlobalRefreshInterval(Number(e.target.value))}
+            >
+              <option value={1000}>1초</option>
+              <option value={2000}>2초</option>
+              <option value={3000}>3초</option>
+              <option value={4000}>4초</option>
+              <option value={5000}>5초</option>
+              <option value={10000}>10초</option>
+              <option value={30000}>30초</option>
+              <option value={60000}>1분</option>
+              <option value={120000}>2분</option>
+              <option value={300000}>5분</option>
+              <option value={600000}>10분</option>
+            </select>
+          </div>
+          <button
+            className="add-card-button"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? "✕ 취소" : "+ 새 카드 추가"}
+          </button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -268,7 +333,7 @@ export const ApiView = () => {
                 >
                   {card.name} →
                 </h2>
-                <p className="card-url">{card.url}</p>
+                <p className="card-url">🔗 {card.url}</p>
                 {card.lastUpdated && (
                   <p className="last-updated">
                     마지막 업데이트: {card.lastUpdated.toLocaleTimeString()}
@@ -332,6 +397,13 @@ export const ApiView = () => {
           </div>
         ))}
       </div>
+
+      {/* Footer */}
+      <footer className="app-footer">
+        <p className="footer-copyright">
+          © 2025 Janus Spec View. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 };

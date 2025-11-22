@@ -1,6 +1,27 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+} from "chart.js";
+import { Pie, Bar } from "react-chartjs-2";
 import "./SwaggerViewDetail.css";
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title
+);
 
 interface DiffLog {
   diffLogId: number;
@@ -57,6 +78,7 @@ export const SwaggerViewDetail = () => {
   const [selectedDiff, setSelectedDiff] = useState<DiffDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"summary" | "chart">("summary");
 
   const fetchDiffLogs = async () => {
     setLoading(true);
@@ -121,6 +143,175 @@ export const SwaggerViewDetail = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // 차트 데이터 생성 함수
+  const generatePieChartData = () => {
+    if (!selectedDiff) return null;
+
+    const data = [
+      selectedDiff.summary.addedCount,
+      selectedDiff.summary.removedCount,
+      selectedDiff.summary.updatedCount,
+    ];
+    const backgroundColors = ["#10B981", "#EF4444", "#F59E0B"]; // green, red, yellow
+
+    return {
+      labels: ["추가됨", "제거됨", "수정됨"],
+      datasets: [
+        {
+          label: "변경 유형",
+          data: data,
+          backgroundColor: backgroundColors,
+          borderColor: backgroundColors.map((color) => `${color}CC`),
+          borderWidth: 2,
+        },
+      ],
+    };
+  };
+
+  const generateBarChartData = () => {
+    if (!selectedDiff) return null;
+
+    const methodCounts: Record<
+      string,
+      { added: number; removed: number; updated: number }
+    > = {};
+
+    const processEndpoints = (
+      endpoints: EndpointChange[],
+      type: "added" | "removed" | "updated"
+    ) => {
+      endpoints.forEach((endpoint) => {
+        const method = endpoint.httpMethod.toUpperCase();
+        if (!methodCounts[method]) {
+          methodCounts[method] = { added: 0, removed: 0, updated: 0 };
+        }
+        methodCounts[method][type]++;
+      });
+    };
+
+    processEndpoints(selectedDiff.addedEndpoints, "added");
+    processEndpoints(selectedDiff.removedEndpoints, "removed");
+    processEndpoints(selectedDiff.updatedEndpoints, "updated");
+
+    const labels = Object.keys(methodCounts);
+    const addedData = labels.map((label) => methodCounts[label].added);
+    const removedData = labels.map((label) => methodCounts[label].removed);
+    const updatedData = labels.map((label) => methodCounts[label].updated);
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "추가됨",
+          data: addedData,
+          backgroundColor: "#10B981",
+          borderColor: "#10B981",
+          borderWidth: 1,
+        },
+        {
+          label: "제거됨",
+          data: removedData,
+          backgroundColor: "#EF4444",
+          borderColor: "#EF4444",
+          borderWidth: 1,
+        },
+        {
+          label: "수정됨",
+          data: updatedData,
+          backgroundColor: "#F59E0B",
+          borderColor: "#F59E0B",
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom" as const,
+        labels: {
+          color: "rgba(255, 255, 255, 0.9)",
+          font: {
+            size: 12,
+            weight: 600,
+          },
+          padding: 15,
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "rgba(255, 255, 255, 0.9)",
+        bodyColor: "rgba(255, 255, 255, 0.9)",
+        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderWidth: 1,
+      },
+    },
+  };
+
+  const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top" as const,
+        labels: {
+          color: "rgba(255, 255, 255, 0.9)",
+          font: {
+            size: 12,
+            weight: 600,
+          },
+          padding: 15,
+        },
+      },
+      title: {
+        display: true,
+        text: "HTTP 메서드별 변경 현황",
+        color: "rgba(255, 255, 255, 0.9)",
+        font: {
+          size: 16,
+          weight: 700,
+        },
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "rgba(255, 255, 255, 0.9)",
+        bodyColor: "rgba(255, 255, 255, 0.9)",
+        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: "rgba(255, 255, 255, 0.7)",
+          font: {
+            size: 11,
+            weight: 600,
+          },
+        },
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
+        },
+      },
+      y: {
+        ticks: {
+          color: "rgba(255, 255, 255, 0.7)",
+          font: {
+            size: 11,
+            weight: 600,
+          },
+        },
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
+        },
+        beginAtZero: true,
+      },
+    },
   };
 
   return (
@@ -195,69 +386,115 @@ export const SwaggerViewDetail = () => {
           {selectedDiff && !loading && (
             <>
               <div className="summary-section">
-                <h2>📝 변경 요약</h2>
-                <div className="summary-card">
-                  <div className="summary-row">
-                    <div className="summary-item">
-                      <label>서비스</label>
-                      <span className="value">
-                        {selectedDiff.summary.serviceName}
-                      </span>
-                    </div>
-                    <div className="summary-item">
-                      <label>변경 ID</label>
-                      <span className="value">
-                        #{selectedDiff.summary.diffLogId}
-                      </span>
-                    </div>
-                    <div className="summary-item">
-                      <label>생성 시간</label>
-                      <span className="value">
-                        {formatDate(selectedDiff.summary.createdAt)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="summary-row">
-                    <div className="summary-item">
-                      <label>이전 버전</label>
-                      <span className="version-tag">
-                        {selectedDiff.summary.oldVersionTag}
-                      </span>
-                    </div>
-                    <div className="summary-item">
-                      <label>새 버전</label>
-                      <span className="version-tag">
-                        {selectedDiff.summary.newVersionTag}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="stats-row">
-                    <div className="stat-box added">
-                      <div className="stat-number">
-                        {selectedDiff.summary.addedCount}
-                      </div>
-                      <div className="stat-label">추가됨</div>
-                    </div>
-                    <div className="stat-box removed">
-                      <div className="stat-number">
-                        {selectedDiff.summary.removedCount}
-                      </div>
-                      <div className="stat-label">제거됨</div>
-                    </div>
-                    <div className="stat-box updated">
-                      <div className="stat-number">
-                        {selectedDiff.summary.updatedCount}
-                      </div>
-                      <div className="stat-label">수정됨</div>
-                    </div>
-                    <div className="stat-box total">
-                      <div className="stat-number">
-                        {selectedDiff.summary.totalChanges}
-                      </div>
-                      <div className="stat-label">총 변경</div>
-                    </div>
+                <div className="section-header">
+                  <h2>📝 변경 요약</h2>
+                  <div className="tab-buttons">
+                    <button
+                      className={`tab-button ${
+                        activeTab === "summary" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("summary")}
+                    >
+                      요약
+                    </button>
+                    <button
+                      className={`tab-button ${
+                        activeTab === "chart" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("chart")}
+                    >
+                      차트
+                    </button>
                   </div>
                 </div>
+
+                {activeTab === "summary" && (
+                  <div className="summary-card">
+                    <div className="summary-row">
+                      <div className="summary-item">
+                        <label>서비스</label>
+                        <span className="value">
+                          {selectedDiff.summary.serviceName}
+                        </span>
+                      </div>
+                      <div className="summary-item">
+                        <label>변경 ID</label>
+                        <span className="value">
+                          #{selectedDiff.summary.diffLogId}
+                        </span>
+                      </div>
+                      <div className="summary-item">
+                        <label>생성 시간</label>
+                        <span className="value">
+                          {formatDate(selectedDiff.summary.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="summary-row">
+                      <div className="summary-item">
+                        <label>이전 버전</label>
+                        <span className="version-tag">
+                          {selectedDiff.summary.oldVersionTag}
+                        </span>
+                      </div>
+                      <div className="summary-item">
+                        <label>새 버전</label>
+                        <span className="version-tag">
+                          {selectedDiff.summary.newVersionTag}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="stats-row">
+                      <div className="stat-box added">
+                        <div className="stat-number">
+                          {selectedDiff.summary.addedCount}
+                        </div>
+                        <div className="stat-label">추가됨</div>
+                      </div>
+                      <div className="stat-box removed">
+                        <div className="stat-number">
+                          {selectedDiff.summary.removedCount}
+                        </div>
+                        <div className="stat-label">제거됨</div>
+                      </div>
+                      <div className="stat-box updated">
+                        <div className="stat-number">
+                          {selectedDiff.summary.updatedCount}
+                        </div>
+                        <div className="stat-label">수정됨</div>
+                      </div>
+                      <div className="stat-box total">
+                        <div className="stat-number">
+                          {selectedDiff.summary.totalChanges}
+                        </div>
+                        <div className="stat-label">총 변경</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "chart" && generatePieChartData() && (
+                  <div className="chart-container">
+                    <div className="chart-section">
+                      <h3>변경 유형별 분포</h3>
+                      <div className="pie-chart-wrapper">
+                        <Pie
+                          data={generatePieChartData()!}
+                          options={pieChartOptions}
+                        />
+                      </div>
+                    </div>
+                    <div className="chart-section">
+                      <h3>HTTP 메서드별 변경 현황</h3>
+                      <div className="bar-chart-wrapper">
+                        <Bar
+                          data={generateBarChartData()!}
+                          options={barChartOptions}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 추가된 엔드포인트 */}
@@ -363,14 +600,17 @@ export const SwaggerViewDetail = () => {
 
                     // 변경사항 감지
                     if (before && after) {
-                      if (before.summary !== after.summary) changes.push("설명");
+                      if (before.summary !== after.summary)
+                        changes.push("설명");
                       if (before.operationId !== after.operationId)
                         changes.push("Operation ID");
                       if (before.deprecated !== after.deprecated)
                         changes.push("Deprecated 상태");
                       if (before.requestSchemaName !== after.requestSchemaName)
                         changes.push("Request Schema");
-                      if (before.responseSchemaName !== after.responseSchemaName)
+                      if (
+                        before.responseSchemaName !== after.responseSchemaName
+                      )
                         changes.push("Response Schema");
                     }
 
@@ -380,7 +620,9 @@ export const SwaggerViewDetail = () => {
                           <span
                             className="method-badge"
                             style={{
-                              backgroundColor: getMethodColor(endpoint.httpMethod),
+                              backgroundColor: getMethodColor(
+                                endpoint.httpMethod
+                              ),
                             }}
                           >
                             {endpoint.httpMethod.toUpperCase()}
@@ -390,7 +632,8 @@ export const SwaggerViewDetail = () => {
 
                         {changes.length > 0 && (
                           <div className="changes-indicator">
-                            <strong>🔍 변경된 항목:</strong> {changes.join(", ")}
+                            <strong>🔍 변경된 항목:</strong>{" "}
+                            {changes.join(", ")}
                           </div>
                         )}
 
@@ -469,14 +712,20 @@ export const SwaggerViewDetail = () => {
                           {before?.requestSchemaName !==
                             after?.requestSchemaName && (
                             <div className="field-comparison">
-                              <div className="field-label">📥 Request Schema</div>
+                              <div className="field-label">
+                                📥 Request Schema
+                              </div>
                               <div className="comparison-row">
                                 <div className="before-value">
-                                  <code>{before?.requestSchemaName || "없음"}</code>
+                                  <code>
+                                    {before?.requestSchemaName || "없음"}
+                                  </code>
                                 </div>
                                 <div className="arrow">→</div>
                                 <div className="after-value">
-                                  <code>{after?.requestSchemaName || "없음"}</code>
+                                  <code>
+                                    {after?.requestSchemaName || "없음"}
+                                  </code>
                                 </div>
                               </div>
                             </div>
@@ -486,7 +735,9 @@ export const SwaggerViewDetail = () => {
                           {before?.responseSchemaName !==
                             after?.responseSchemaName && (
                             <div className="field-comparison">
-                              <div className="field-label">📤 Response Schema</div>
+                              <div className="field-label">
+                                📤 Response Schema
+                              </div>
                               <div className="comparison-row">
                                 <div className="before-value">
                                   <code>
@@ -495,7 +746,9 @@ export const SwaggerViewDetail = () => {
                                 </div>
                                 <div className="arrow">→</div>
                                 <div className="after-value">
-                                  <code>{after?.responseSchemaName || "없음"}</code>
+                                  <code>
+                                    {after?.responseSchemaName || "없음"}
+                                  </code>
                                 </div>
                               </div>
                             </div>
@@ -510,6 +763,13 @@ export const SwaggerViewDetail = () => {
           )}
         </main>
       </div>
+
+      {/* Footer */}
+      <footer className="detail-footer">
+        <p className="footer-copyright">
+          © 2025 Janus Spec View. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 };
