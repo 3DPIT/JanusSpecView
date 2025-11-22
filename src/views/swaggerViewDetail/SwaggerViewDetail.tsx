@@ -211,42 +211,50 @@ export const SwaggerViewDetail = () => {
     });
   };
 
-  // 차트 데이터 생성 함수
-  const generatePieChartData = () => {
+  // 엔드포인트 차트 데이터 생성 함수
+  const generateEndpointPieChartData = () => {
     if (!selectedDiff) return null;
 
-    const endpointData = [
+    const data = [
       selectedDiff.summary.addedCount,
       selectedDiff.summary.removedCount,
       selectedDiff.summary.updatedCount,
     ];
 
-    const schemaAddedCount = selectedDiff.addedSchemas?.length || 0;
-    const schemaRemovedCount = selectedDiff.removedSchemas?.length || 0;
-    const schemaUpdatedCount = selectedDiff.updatedSchemas?.length || 0;
-
-    const schemaData = [
-      schemaAddedCount,
-      schemaRemovedCount,
-      schemaUpdatedCount,
-    ];
-
     const backgroundColors = ["#10B981", "#EF4444", "#F59E0B"]; // green, red, yellow
-    const schemaColors = ["#34d399", "#f87171", "#fbbf24"]; // lighter shades for schema
 
     return {
       labels: ["추가됨", "제거됨", "수정됨"],
       datasets: [
         {
           label: "엔드포인트",
-          data: endpointData,
+          data: data,
           backgroundColor: backgroundColors,
           borderColor: backgroundColors.map((color) => `${color}CC`),
           borderWidth: 2,
         },
+      ],
+    };
+  };
+
+  // 스키마 차트 데이터 생성 함수
+  const generateSchemaPieChartData = () => {
+    if (!selectedDiff) return null;
+
+    const schemaAddedCount = selectedDiff.addedSchemas?.length || 0;
+    const schemaRemovedCount = selectedDiff.removedSchemas?.length || 0;
+    const schemaUpdatedCount = selectedDiff.updatedSchemas?.length || 0;
+
+    const data = [schemaAddedCount, schemaRemovedCount, schemaUpdatedCount];
+
+    const schemaColors = ["#34d399", "#f87171", "#fbbf24"]; // lighter shades for schema
+
+    return {
+      labels: ["추가됨", "제거됨", "수정됨"],
+      datasets: [
         {
           label: "스키마",
-          data: schemaData,
+          data: data,
           backgroundColor: schemaColors,
           borderColor: schemaColors.map((color) => `${color}CC`),
           borderWidth: 2,
@@ -255,7 +263,8 @@ export const SwaggerViewDetail = () => {
     };
   };
 
-  const generateBarChartData = () => {
+  // 엔드포인트 바 차트 데이터 생성 함수
+  const generateEndpointBarChartData = () => {
     if (!selectedDiff) return null;
 
     const methodCounts: Record<
@@ -285,33 +294,64 @@ export const SwaggerViewDetail = () => {
     const removedData = labels.map((label) => methodCounts[label].removed);
     const updatedData = labels.map((label) => methodCounts[label].updated);
 
-    // 스키마 데이터
-    const schemaAddedCount = selectedDiff.addedSchemas?.length || 0;
-    const schemaRemovedCount = selectedDiff.removedSchemas?.length || 0;
-    const schemaUpdatedCount = selectedDiff.updatedSchemas?.length || 0;
-
     return {
-      labels: [...labels, "스키마"],
+      labels: labels,
       datasets: [
         {
           label: "추가됨",
-          data: [...addedData, schemaAddedCount],
+          data: addedData,
           backgroundColor: "#10B981",
           borderColor: "#10B981",
           borderWidth: 1,
         },
         {
           label: "제거됨",
-          data: [...removedData, schemaRemovedCount],
+          data: removedData,
           backgroundColor: "#EF4444",
           borderColor: "#EF4444",
           borderWidth: 1,
         },
         {
           label: "수정됨",
-          data: [...updatedData, schemaUpdatedCount],
+          data: updatedData,
           backgroundColor: "#F59E0B",
           borderColor: "#F59E0B",
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  // 스키마 바 차트 데이터 생성 함수
+  const generateSchemaBarChartData = () => {
+    if (!selectedDiff) return null;
+
+    const schemaAddedCount = selectedDiff.addedSchemas?.length || 0;
+    const schemaRemovedCount = selectedDiff.removedSchemas?.length || 0;
+    const schemaUpdatedCount = selectedDiff.updatedSchemas?.length || 0;
+
+    return {
+      labels: ["스키마"],
+      datasets: [
+        {
+          label: "추가됨",
+          data: [schemaAddedCount],
+          backgroundColor: "#34d399",
+          borderColor: "#34d399",
+          borderWidth: 1,
+        },
+        {
+          label: "제거됨",
+          data: [schemaRemovedCount],
+          backgroundColor: "#f87171",
+          borderColor: "#f87171",
+          borderWidth: 1,
+        },
+        {
+          label: "수정됨",
+          data: [schemaUpdatedCount],
+          backgroundColor: "#fbbf24",
+          borderColor: "#fbbf24",
           borderWidth: 1,
         },
       ],
@@ -620,26 +660,72 @@ export const SwaggerViewDetail = () => {
                   </div>
                 )}
 
-                {activeTab === "chart" && generatePieChartData() && (
+                {activeTab === "chart" && (
                   <div className="chart-container">
-                    <div className="chart-section">
-                      <h3>변경 유형별 분포</h3>
-                      <div className="pie-chart-wrapper">
-                        <Pie
-                          data={generatePieChartData()!}
-                          options={pieChartOptions}
-                        />
+                    {/* 엔드포인트 차트 섹션 */}
+                    <div className="chart-group">
+                      <h2 className="chart-group-title">
+                        📡 엔드포인트 변경 현황
+                      </h2>
+                      <div className="chart-sections-grid">
+                        {generateEndpointPieChartData() && (
+                          <div className="chart-section">
+                            <h3>변경 유형별 분포</h3>
+                            <div className="pie-chart-wrapper">
+                              <Pie
+                                data={generateEndpointPieChartData()!}
+                                options={pieChartOptions}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {generateEndpointBarChartData() && (
+                          <div className="chart-section">
+                            <h3>HTTP 메서드별 변경 현황</h3>
+                            <div className="bar-chart-wrapper">
+                              <Bar
+                                data={generateEndpointBarChartData()!}
+                                options={barChartOptions}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="chart-section">
-                      <h3>HTTP 메서드별 변경 현황</h3>
-                      <div className="bar-chart-wrapper">
-                        <Bar
-                          data={generateBarChartData()!}
-                          options={barChartOptions}
-                        />
-                      </div>
-                    </div>
+
+                    {/* 스키마 차트 섹션 */}
+                    {(selectedDiff.addedSchemas ||
+                      selectedDiff.removedSchemas ||
+                      selectedDiff.updatedSchemas) &&
+                      generateSchemaPieChartData() && (
+                        <div className="chart-group">
+                          <h2 className="chart-group-title">
+                            📋 스키마 변경 현황
+                          </h2>
+                          <div className="chart-sections-grid">
+                            <div className="chart-section">
+                              <h3>변경 유형별 분포</h3>
+                              <div className="pie-chart-wrapper">
+                                <Pie
+                                  data={generateSchemaPieChartData()!}
+                                  options={pieChartOptions}
+                                />
+                              </div>
+                            </div>
+                            {generateSchemaBarChartData() && (
+                              <div className="chart-section">
+                                <h3>변경 현황</h3>
+                                <div className="bar-chart-wrapper">
+                                  <Bar
+                                    data={generateSchemaBarChartData()!}
+                                    options={barChartOptions}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
