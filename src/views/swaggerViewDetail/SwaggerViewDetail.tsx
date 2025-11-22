@@ -63,11 +63,31 @@ interface EndpointChange {
   };
 }
 
+interface SchemaChange {
+  schemaName: string;
+  changeType: string;
+  beforeJson: string | null;
+  afterJson: string | null;
+  beforeData?: {
+    name: string;
+    rawSchema: string;
+    changedFields?: Record<string, string>;
+  };
+  afterData?: {
+    name: string;
+    rawSchema: string;
+    changedFields?: Record<string, string>;
+  };
+}
+
 interface DiffDetail {
   summary: DiffLog;
   addedEndpoints: EndpointChange[];
   removedEndpoints: EndpointChange[];
   updatedEndpoints: EndpointChange[];
+  addedSchemas?: SchemaChange[];
+  removedSchemas?: SchemaChange[];
+  updatedSchemas?: SchemaChange[];
   diffJsonSummary: string;
 }
 
@@ -79,6 +99,9 @@ export const SwaggerViewDetail = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "chart">("summary");
+  const [schemaCounts, setSchemaCounts] = useState<
+    Record<number, { added: number; removed: number; updated: number }>
+  >({});
 
   const fetchDiffLogs = async () => {
     setLoading(true);
@@ -89,11 +112,44 @@ export const SwaggerViewDetail = () => {
       );
       if (!res.ok) throw new Error("Failed to fetch diff logs");
       const data = await res.json();
-      setDiffLogs(data.content || []);
+      const logs = data.content || [];
+      setDiffLogs(logs);
+
+      // 각 diffLog에 대한 스키마 개수 정보 미리 가져오기
+      const schemaCountsMap: Record<
+        number,
+        { added: number; removed: number; updated: number }
+      > = {};
+
+      // 병렬로 모든 diffLog의 상세 정보 가져오기
+      const detailPromises = logs.map(async (log: DiffLog) => {
+        try {
+          const detailRes = await fetch(
+            `http://localhost:8080/api/v1/diff/${log.diffLogId}`
+          );
+          if (detailRes.ok) {
+            const detailData = await detailRes.json();
+            schemaCountsMap[log.diffLogId] = {
+              added: detailData.addedSchemas?.length || 0,
+              removed: detailData.removedSchemas?.length || 0,
+              updated: detailData.updatedSchemas?.length || 0,
+            };
+          }
+        } catch (err) {
+          // 개별 실패는 무시하고 계속 진행
+          console.error(
+            `Failed to fetch detail for diffLog ${log.diffLogId}:`,
+            err
+          );
+        }
+      });
+
+      await Promise.all(detailPromises);
+      setSchemaCounts(schemaCountsMap);
 
       // 자동으로 가장 최신 diffLog 선택
-      if (data.content && data.content.length > 0) {
-        fetchDiffDetail(data.content[0].diffLogId);
+      if (logs.length > 0) {
+        fetchDiffDetail(logs[0].diffLogId);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error fetching data");
@@ -116,6 +172,16 @@ export const SwaggerViewDetail = () => {
       if (!res.ok) throw new Error("Failed to fetch diff detail");
       const data = await res.json();
       setSelectedDiff(data);
+
+      // 스키마 개수 정보 저장
+      setSchemaCounts((prev) => ({
+        ...prev,
+        [diffLogId]: {
+          added: data.addedSchemas?.length || 0,
+          removed: data.removedSchemas?.length || 0,
+          updated: data.updatedSchemas?.length || 0,
+        },
+      }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error fetching detail");
     } finally {
@@ -149,21 +215,40 @@ export const SwaggerViewDetail = () => {
   const generatePieChartData = () => {
     if (!selectedDiff) return null;
 
-    const data = [
+    const endpointData = [
       selectedDiff.summary.addedCount,
       selectedDiff.summary.removedCount,
       selectedDiff.summary.updatedCount,
     ];
+
+    const schemaAddedCount = selectedDiff.addedSchemas?.length || 0;
+    const schemaRemovedCount = selectedDiff.removedSchemas?.length || 0;
+    const schemaUpdatedCount = selectedDiff.updatedSchemas?.length || 0;
+
+    const schemaData = [
+      schemaAddedCount,
+      schemaRemovedCount,
+      schemaUpdatedCount,
+    ];
+
     const backgroundColors = ["#10B981", "#EF4444", "#F59E0B"]; // green, red, yellow
+    const schemaColors = ["#34d399", "#f87171", "#fbbf24"]; // lighter shades for schema
 
     return {
       labels: ["추가됨", "제거됨", "수정됨"],
       datasets: [
         {
-          label: "변경 유형",
-          data: data,
+          label: "엔드포인트",
+          data: endpointData,
           backgroundColor: backgroundColors,
           borderColor: backgroundColors.map((color) => `${color}CC`),
+          borderWidth: 2,
+        },
+        {
+          label: "스키마",
+          data: schemaData,
+          backgroundColor: schemaColors,
+          borderColor: schemaColors.map((color) => `${color}CC`),
           borderWidth: 2,
         },
       ],
@@ -200,26 +285,31 @@ export const SwaggerViewDetail = () => {
     const removedData = labels.map((label) => methodCounts[label].removed);
     const updatedData = labels.map((label) => methodCounts[label].updated);
 
+    // 스키마 데이터
+    const schemaAddedCount = selectedDiff.addedSchemas?.length || 0;
+    const schemaRemovedCount = selectedDiff.removedSchemas?.length || 0;
+    const schemaUpdatedCount = selectedDiff.updatedSchemas?.length || 0;
+
     return {
-      labels: labels,
+      labels: [...labels, "스키마"],
       datasets: [
         {
           label: "추가됨",
-          data: addedData,
+          data: [...addedData, schemaAddedCount],
           backgroundColor: "#10B981",
           borderColor: "#10B981",
           borderWidth: 1,
         },
         {
           label: "제거됨",
-          data: removedData,
+          data: [...removedData, schemaRemovedCount],
           backgroundColor: "#EF4444",
           borderColor: "#EF4444",
           borderWidth: 1,
         },
         {
           label: "수정됨",
-          data: updatedData,
+          data: [...updatedData, schemaUpdatedCount],
           backgroundColor: "#F59E0B",
           borderColor: "#F59E0B",
           borderWidth: 1,
@@ -362,20 +452,43 @@ export const SwaggerViewDetail = () => {
                 <div className="changes-summary">
                   {log.addedCount > 0 && (
                     <span className="change-badge added">
-                      +{log.addedCount}
+                      +{log.addedCount} EP
                     </span>
                   )}
                   {log.removedCount > 0 && (
                     <span className="change-badge removed">
-                      -{log.removedCount}
+                      -{log.removedCount} EP
                     </span>
                   )}
                   {log.updatedCount > 0 && (
                     <span className="change-badge updated">
-                      ~{log.updatedCount}
+                      ~{log.updatedCount} EP
                     </span>
                   )}
-                  <span className="total-changes">{log.totalChanges} 변경</span>
+                  {schemaCounts[log.diffLogId]?.added > 0 && (
+                    <span className="change-badge schema-added">
+                      +{schemaCounts[log.diffLogId].added} SC
+                    </span>
+                  )}
+                  {schemaCounts[log.diffLogId]?.removed > 0 && (
+                    <span className="change-badge schema-removed">
+                      -{schemaCounts[log.diffLogId].removed} SC
+                    </span>
+                  )}
+                  {schemaCounts[log.diffLogId]?.updated > 0 && (
+                    <span className="change-badge schema-updated">
+                      ~{schemaCounts[log.diffLogId].updated} SC
+                    </span>
+                  )}
+                  <span className="total-changes">
+                    {log.totalChanges +
+                      (schemaCounts[log.diffLogId]
+                        ? schemaCounts[log.diffLogId].added +
+                          schemaCounts[log.diffLogId].removed +
+                          schemaCounts[log.diffLogId].updated
+                        : 0)}{" "}
+                    변경
+                  </span>
                 </div>
               </div>
             ))}
@@ -451,27 +564,59 @@ export const SwaggerViewDetail = () => {
                         <div className="stat-number">
                           {selectedDiff.summary.addedCount}
                         </div>
-                        <div className="stat-label">추가됨</div>
+                        <div className="stat-label">엔드포인트 추가</div>
                       </div>
                       <div className="stat-box removed">
                         <div className="stat-number">
                           {selectedDiff.summary.removedCount}
                         </div>
-                        <div className="stat-label">제거됨</div>
+                        <div className="stat-label">엔드포인트 제거</div>
                       </div>
                       <div className="stat-box updated">
                         <div className="stat-number">
                           {selectedDiff.summary.updatedCount}
                         </div>
-                        <div className="stat-label">수정됨</div>
+                        <div className="stat-label">엔드포인트 수정</div>
                       </div>
                       <div className="stat-box total">
                         <div className="stat-number">
                           {selectedDiff.summary.totalChanges}
                         </div>
-                        <div className="stat-label">총 변경</div>
+                        <div className="stat-label">총 엔드포인트 변경</div>
                       </div>
                     </div>
+                    {(selectedDiff.addedSchemas ||
+                      selectedDiff.removedSchemas ||
+                      selectedDiff.updatedSchemas) && (
+                      <div className="stats-row schema-stats">
+                        <div className="stat-box schema-added">
+                          <div className="stat-number">
+                            {selectedDiff.addedSchemas?.length || 0}
+                          </div>
+                          <div className="stat-label">스키마 추가</div>
+                        </div>
+                        <div className="stat-box schema-removed">
+                          <div className="stat-number">
+                            {selectedDiff.removedSchemas?.length || 0}
+                          </div>
+                          <div className="stat-label">스키마 제거</div>
+                        </div>
+                        <div className="stat-box schema-updated">
+                          <div className="stat-number">
+                            {selectedDiff.updatedSchemas?.length || 0}
+                          </div>
+                          <div className="stat-label">스키마 수정</div>
+                        </div>
+                        <div className="stat-box schema-total">
+                          <div className="stat-number">
+                            {(selectedDiff.addedSchemas?.length || 0) +
+                              (selectedDiff.removedSchemas?.length || 0) +
+                              (selectedDiff.updatedSchemas?.length || 0)}
+                          </div>
+                          <div className="stat-label">총 스키마 변경</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -761,6 +906,227 @@ export const SwaggerViewDetail = () => {
                   })}
                 </div>
               )}
+
+              {/* 추가된 스키마 */}
+              {selectedDiff.addedSchemas &&
+                selectedDiff.addedSchemas.length > 0 && (
+                  <div className="endpoints-section">
+                    <h2>
+                      ✅ 추가된 스키마 ({selectedDiff.addedSchemas.length})
+                    </h2>
+                    {selectedDiff.addedSchemas.map((schema, idx) => (
+                      <div key={idx} className="schema-card added">
+                        <div className="schema-header">
+                          <span className="schema-name">
+                            {schema.schemaName}
+                          </span>
+                        </div>
+                        {schema.afterData && (
+                          <div className="schema-details">
+                            <div className="schema-json">
+                              <pre>
+                                {(() => {
+                                  try {
+                                    return JSON.stringify(
+                                      JSON.parse(schema.afterData!.rawSchema),
+                                      null,
+                                      2
+                                    );
+                                  } catch {
+                                    return schema.afterData!.rawSchema;
+                                  }
+                                })()}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              {/* 제거된 스키마 */}
+              {selectedDiff.removedSchemas &&
+                selectedDiff.removedSchemas.length > 0 && (
+                  <div className="endpoints-section">
+                    <h2>
+                      ❌ 제거된 스키마 ({selectedDiff.removedSchemas.length})
+                    </h2>
+                    {selectedDiff.removedSchemas.map((schema, idx) => (
+                      <div key={idx} className="schema-card removed">
+                        <div className="schema-header">
+                          <span className="schema-name">
+                            {schema.schemaName}
+                          </span>
+                        </div>
+                        {schema.beforeData && (
+                          <div className="schema-details">
+                            <div className="schema-json">
+                              <pre>
+                                {(() => {
+                                  try {
+                                    return JSON.stringify(
+                                      JSON.parse(schema.beforeData!.rawSchema),
+                                      null,
+                                      2
+                                    );
+                                  } catch {
+                                    return schema.beforeData!.rawSchema;
+                                  }
+                                })()}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              {/* 수정된 스키마 */}
+              {selectedDiff.updatedSchemas &&
+                selectedDiff.updatedSchemas.length > 0 && (
+                  <div className="endpoints-section">
+                    <h2>
+                      🔄 수정된 스키마 ({selectedDiff.updatedSchemas.length})
+                    </h2>
+                    {selectedDiff.updatedSchemas.map((schema, idx) => {
+                      const before = schema.beforeData;
+                      const after = schema.afterData;
+
+                      return (
+                        <div key={idx} className="schema-card updated">
+                          <div className="schema-header">
+                            <span className="schema-name">
+                              {schema.schemaName}
+                            </span>
+                          </div>
+
+                          {before?.changedFields && after?.changedFields && (
+                            <div className="schema-changes">
+                              <div className="changes-indicator">
+                                <strong>🔍 변경된 필드:</strong>{" "}
+                                {Object.keys(before.changedFields).join(", ")}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="schema-comparison">
+                            {before && after && (
+                              <>
+                                <div className="schema-before">
+                                  <div className="schema-label">
+                                    이전 스키마:
+                                  </div>
+                                  <div className="schema-json">
+                                    <pre>
+                                      {(() => {
+                                        try {
+                                          return JSON.stringify(
+                                            JSON.parse(before.rawSchema),
+                                            null,
+                                            2
+                                          );
+                                        } catch {
+                                          return before.rawSchema;
+                                        }
+                                      })()}
+                                    </pre>
+                                  </div>
+                                </div>
+                                <div className="schema-after">
+                                  <div className="schema-label">
+                                    이후 스키마:
+                                  </div>
+                                  <div className="schema-json">
+                                    <pre>
+                                      {(() => {
+                                        try {
+                                          return JSON.stringify(
+                                            JSON.parse(after.rawSchema),
+                                            null,
+                                            2
+                                          );
+                                        } catch {
+                                          return after.rawSchema;
+                                        }
+                                      })()}
+                                    </pre>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {before?.changedFields && after?.changedFields && (
+                            <div className="field-changes-detail">
+                              <h4>필드별 변경사항:</h4>
+                              {Object.keys(before.changedFields).map(
+                                (fieldName) => (
+                                  <div
+                                    key={fieldName}
+                                    className="field-change-item"
+                                  >
+                                    <div className="field-name">
+                                      {fieldName}
+                                    </div>
+                                    <div className="field-comparison-row">
+                                      <div className="before-value">
+                                        <span className="label">이전:</span>
+                                        <code>
+                                          {(() => {
+                                            try {
+                                              return JSON.stringify(
+                                                JSON.parse(
+                                                  before.changedFields![
+                                                    fieldName
+                                                  ]
+                                                ),
+                                                null,
+                                                2
+                                              );
+                                            } catch {
+                                              return before.changedFields![
+                                                fieldName
+                                              ];
+                                            }
+                                          })()}
+                                        </code>
+                                      </div>
+                                      <div className="arrow">→</div>
+                                      <div className="after-value">
+                                        <span className="label">이후:</span>
+                                        <code>
+                                          {(() => {
+                                            try {
+                                              return JSON.stringify(
+                                                JSON.parse(
+                                                  after.changedFields![
+                                                    fieldName
+                                                  ]
+                                                ),
+                                                null,
+                                                2
+                                              );
+                                            } catch {
+                                              return after.changedFields![
+                                                fieldName
+                                              ];
+                                            }
+                                          })()}
+                                        </code>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
             </>
           )}
         </main>
