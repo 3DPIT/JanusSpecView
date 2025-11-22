@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./ApiView.css";
+import "./SwaggerView.css";
 
 interface SwaggerCard {
   id: string;
@@ -71,7 +71,7 @@ const loadCardsFromStorage = (): SwaggerCard[] => {
   ];
 };
 
-export const ApiView = () => {
+export const SwaggerView = () => {
   const navigate = useNavigate();
   const [cards, setCards] = useState<SwaggerCard[]>(loadCardsFromStorage());
   const [newCardName, setNewCardName] = useState("");
