@@ -1,0 +1,676 @@
+.detail-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  padding: 1.5rem;
+}
+
+.detail-header {
+  max-width: 1600px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.back-button {
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-5px);
+}
+
+.detail-header h1 {
+  color: white;
+  font-size: 1.8rem;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.error-message {
+  max-width: 1600px;
+  margin: 0 auto 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(249, 62, 62, 0.9), rgba(220, 38, 38, 0.9));
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.detail-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+}
+
+/* 왼쪽 사이드바 - Diff Logs */
+.diff-logs-sidebar {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 1.2rem;
+  height: fit-content;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.diff-logs-sidebar h2 {
+  font-size: 1.2rem;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.8rem;
+  border-bottom: 3px solid #475569;
+  font-weight: 800;
+}
+
+.diff-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.diff-log-card {
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #0f172a;
+}
+
+.diff-log-card:hover {
+  border-color: #4f46e5;
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}
+
+.diff-log-card.active {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  border-color: #4f46e5;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.5);
+  font-weight: 700;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.log-id {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.diff-log-card.active .log-id {
+  color: #fef08a;
+}
+
+.log-date {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.version-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.version-badge {
+  padding: 0.2rem 0.6rem;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.diff-log-card.active .version-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.arrow {
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+.changes-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.change-badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.change-badge.added {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.diff-log-card.active .change-badge.added {
+  background: #10b981;
+  color: white;
+}
+
+.change-badge.removed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.diff-log-card.active .change-badge.removed {
+  background: #ef4444;
+  color: white;
+}
+
+.change-badge.updated {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.diff-log-card.active .change-badge.updated {
+  background: #f59e0b;
+  color: white;
+}
+
+.total-changes {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-left: auto;
+}
+
+/* 오른쪽 메인 - Diff Detail */
+.diff-detail-main {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 1.5rem;
+  min-height: 600px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #4f46e5;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Summary Section */
+.summary-section {
+  margin-bottom: 2rem;
+}
+
+.summary-section h2 {
+  font-size: 1.3rem;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.8rem;
+  border-bottom: 3px solid #475569;
+  font-weight: 800;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 1.2rem;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.summary-item label {
+  font-size: 0.75rem;
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-item .value {
+  font-size: 1rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.version-tag {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid #cbd5e1;
+}
+
+.stat-box {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background: white;
+  border: 2px solid;
+}
+
+.stat-box.added {
+  border-color: #059669;
+  background: linear-gradient(135deg, #6ee7b7, #34d399);
+  color: #064e3b;
+}
+
+.stat-box.removed {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #fca5a5, #f87171);
+  color: #7f1d1d;
+}
+
+.stat-box.updated {
+  border-color: #d97706;
+  background: linear-gradient(135deg, #fcd34d, #fbbf24);
+  color: #78350f;
+}
+
+.stat-box.total {
+  border-color: #4f46e5;
+  background: linear-gradient(135deg, #a5b4fc, #818cf8);
+  color: #1e1b4b;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 900;
+  color: inherit;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: inherit;
+  font-weight: 700;
+  margin-top: 0.3rem;
+  opacity: 0.9;
+}
+
+/* Endpoints Section */
+.endpoints-section {
+  margin-bottom: 2rem;
+}
+
+.endpoints-section h2 {
+  font-size: 1.2rem;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.8rem;
+  border-bottom: 3px solid #475569;
+  font-weight: 800;
+}
+
+.endpoint-card {
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+  border-left: 4px solid;
+  transition: all 0.3s ease;
+}
+
+.endpoint-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.endpoint-card.added {
+  background: linear-gradient(135deg, #a7f3d0, #d1fae5);
+  border-left-color: #059669;
+  border-left-width: 5px;
+}
+
+.endpoint-card.removed {
+  background: linear-gradient(135deg, #fca5a5, #fee2e2);
+  border-left-color: #dc2626;
+  border-left-width: 5px;
+}
+
+.endpoint-card.updated {
+  background: linear-gradient(135deg, #fcd34d, #fef3c7);
+  border-left-color: #d97706;
+  border-left-width: 5px;
+}
+
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.method-badge {
+  padding: 0.3rem 0.7rem;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.endpoint-path {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.endpoint-details {
+  padding-left: 4.5rem;
+}
+
+.endpoint-summary {
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.endpoint-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.endpoint-meta code {
+  background: #1e293b;
+  color: #fbbf24;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.deprecated-badge {
+  padding: 0.3rem 0.6rem;
+  background: #dc2626;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* 변경 표시자 */
+.changes-indicator {
+  margin: 1rem 0;
+  padding: 0.8rem 1rem;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-left: 4px solid #d97706;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #78350f;
+  font-weight: 700;
+}
+
+.changes-indicator strong {
+  color: #78350f;
+  font-weight: 900;
+}
+
+/* 상세 비교 */
+.detailed-comparison {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+}
+
+.field-comparison {
+  margin-bottom: 1.2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.field-comparison:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comparison-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.before-value,
+.after-value {
+  padding: 0.8rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.before-value {
+  background: linear-gradient(135deg, #fca5a5, #fee2e2);
+  border: 2px solid #dc2626;
+}
+
+.after-value {
+  background: linear-gradient(135deg, #6ee7b7, #d1fae5);
+  border: 2px solid #059669;
+}
+
+.before-value .label,
+.after-value .label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1e293b;
+}
+
+.before-value .value,
+.after-value .value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.before-value code,
+.after-value code {
+  background: #1e293b;
+  color: #fbbf24;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.comparison-row .arrow {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #4f46e5;
+}
+
+.deprecated-yes {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  background: #dc2626;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.deprecated-no {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  background: #059669;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.endpoint-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding-left: 4.5rem;
+}
+
+.before-section,
+.after-section {
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.before-section {
+  background: linear-gradient(135deg, #fca5a5, #fee2e2);
+  border: 2px solid #dc2626;
+}
+
+.after-section {
+  background: linear-gradient(135deg, #6ee7b7, #d1fae5);
+  border: 2px solid #059669;
+}
+
+.before-section h4,
+.after-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 800;
+}
+
+.before-section .endpoint-summary,
+.after-section .endpoint-summary {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+/* 스크롤바 스타일 */
+.diff-logs-sidebar::-webkit-scrollbar,
+.diff-detail-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.diff-logs-sidebar::-webkit-scrollbar-track,
+.diff-detail-main::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.diff-logs-sidebar::-webkit-scrollbar-thumb,
+.diff-detail-main::-webkit-scrollbar-thumb {
+  background: #4f46e5;
+  border-radius: 10px;
+}
+
+.diff-logs-sidebar::-webkit-scrollbar-thumb:hover,
+.diff-detail-main::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .detail-content {
+    grid-template-columns: 1fr;
+  }
+
+  .diff-logs-sidebar {
+    max-height: 400px;
+  }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .endpoint-comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .comparison-row .arrow {
+    text-align: center;
+    transform: rotate(90deg);
+  }
+
+  .before-value,
+  .after-value {
+    width: 100%;
+  }
+}
+
