@@ -272,7 +272,7 @@
   max-width: 100%;
   position: relative;
   backdrop-filter: blur(20px);
-  height: 210px;
+  height: 260px;
 }
 
 .swagger-card::before {
