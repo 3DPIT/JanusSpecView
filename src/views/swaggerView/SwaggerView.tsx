@@ -80,8 +80,8 @@ const loadCardsFromStorage = (): SwaggerCard[] => {
   return [
     {
       id: "1",
-      name: "Members API",
-      url: "http://3dpit.iptime.org:8000/api/v1/members/api-docs/swagger",
+      name: "users",
+      url: "http://3dpit.iptime.org:8000/api/v1/users/api-docs",
       swaggerUrl: undefined,
       autoRefresh: false,
       loading: false,
@@ -177,13 +177,16 @@ export const SwaggerView = () => {
       if (!card) return;
 
       try {
-        const res = await fetch("http://127.0.0.1:8080/api/v1/swagger", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ url: card.url }),
-        });
+        const res = await fetch(
+          "http://3dpit.iptime.org:18081/api/v1/swagger",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: card.url }),
+          }
+        );
 
         // HTTP 상태 코드 확인
         if (!res.ok) {
@@ -607,7 +610,7 @@ export const SwaggerView = () => {
             <input
               type="text"
               id="cardUrl"
-              placeholder="예: http://localhost:8080/api-docs/swagger"
+              placeholder="예: http://3dpit.iptime.org:18081//api-docs/swagger"
               value={newCardUrl}
               onChange={(e) => setNewCardUrl(e.target.value)}
               className="card-url-input"
@@ -618,7 +621,7 @@ export const SwaggerView = () => {
             <input
               type="text"
               id="cardSwaggerUrl"
-              placeholder="예: http://localhost:8080/swagger-ui/index.html"
+              placeholder="예: http://3dpit.iptime.org:18081//swagger-ui/index.html"
               value={newCardSwaggerUrl}
               onChange={(e) => setNewCardSwaggerUrl(e.target.value)}
               className="card-url-input"

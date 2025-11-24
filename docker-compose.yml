@@ -1,0 +1,13 @@
+services:
+  janus.spec.view:
+    image: janus.spec.view:0.1
+    container_name: janus-spec-view
+    ports:
+      - "5173:80"
+    networks:
+      - net
+
+networks:
+  net:
+    name: black
+    external: true

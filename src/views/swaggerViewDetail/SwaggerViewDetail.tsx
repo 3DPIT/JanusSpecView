@@ -111,7 +111,7 @@ export const SwaggerViewDetail = () => {
     setError(null);
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/diff/service/${serviceName}?page=0&size=10`
+        `http://3dpit.iptime.org:18081/api/v1/diff/service/${serviceName}?page=0&size=10`
       );
       if (!res.ok) throw new Error("Failed to fetch diff logs");
       const data = await res.json();
@@ -128,7 +128,7 @@ export const SwaggerViewDetail = () => {
       const detailPromises = logs.map(async (log: DiffLog) => {
         try {
           const detailRes = await fetch(
-            `http://localhost:8080/api/v1/diff/${log.diffLogId}`
+            `http://3dpit.iptime.org:18081/api/v1/diff/${log.diffLogId}`
           );
           if (detailRes.ok) {
             const detailData = await detailRes.json();
@@ -171,7 +171,9 @@ export const SwaggerViewDetail = () => {
   const fetchDiffDetail = async (diffLogId: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/diff/${diffLogId}`);
+      const res = await fetch(
+        `http://3dpit.iptime.org:18081/api/v1/diff/${diffLogId}`
+      );
       if (!res.ok) throw new Error("Failed to fetch diff detail");
       const data = await res.json();
       setSelectedDiff(data);
