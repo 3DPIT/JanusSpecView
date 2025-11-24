@@ -1,0 +1,75 @@
+name: Build & Send React
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # Node 설치 (React 빌드에 필요)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # React 빌드
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build React
+        run: npm run build
+
+      - name: Build Docker Image
+        run: docker build -t janus.spec.view:0.1 .
+
+      - name: Save Docker image to tar
+        run: docker save janus.spec.view:0.1 -o janus-view.tar
+
+      - name: Fix permission (local)
+        run: sudo chmod 777 janus-view.tar
+
+
+      # 서버로 업로드
+      - name: Send build to server via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "janus-view.tar"
+          target: "/home/${{ secrets.SSH_USER }}/janusSpec/frontend/"
+          tar_dereference: false
+          rm: false
+          strip_components: 0
+
+      # --------------------
+      #   SSH: 서버에서 재배포 자동 실행
+      # --------------------
+      - name: Deploy on Server
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.SSH_USER }}/janusSpec
+
+            echo "[1] Load docker image"
+            docker load -i janus-view.tar
+
+            echo "[2] Stop previous container"
+            cd /home/black/janusSpec/frontend
+            docker compose down || true
+
+            echo "[3] Start new container"
+            docker compose up -d
+
+            echo "[4] Done!"
