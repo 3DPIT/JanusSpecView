@@ -60,7 +60,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/${{ secrets.SSH_USER }}/janusSpec
+            cd /home/${{ secrets.SSH_USER }}/janusSpec/frontend
 
             echo "[1] Load docker image"
             docker load -i janus-view.tar
